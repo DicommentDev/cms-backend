@@ -1,21 +1,24 @@
 // src/app.js
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
+const express = require('express')
+const cors = require('cors')
+const morgan = require('morgan')
+const reviewRoutes = require('./modules/reviews/review.routes')
 
 
 function createApp() {
-  const app = express();
+  const app = express()
 
-  app.use(cors());
-  app.use(express.json());
-  app.use(morgan('dev'));
+  app.use(cors())
+  app.use(express.json())
+  app.use(morgan('dev'))
 
   app.get('/', (req, res)=>{
     res.send('cms-backend')
   })
 
-  return app;
+  app.use('/api/reviews', reviewRoutes)
+
+  return app
 }
 
-module.exports = createApp;
+module.exports = createApp

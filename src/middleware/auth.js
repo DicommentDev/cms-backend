@@ -10,9 +10,8 @@ const auth = (req, res, next) => {
 
   const token = authHeader.split(' ')[1];
   try {
-    // Verifikasi dengan public key Supabase (gunakan SUPABASE_JWT_SECRET)
     const payload = jwt.verify(token, process.env.SUPABASE_JWT_SECRET);
-    req.user = payload; // simpan user info di request
+    req.user = payload; 
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Invalid token' });
