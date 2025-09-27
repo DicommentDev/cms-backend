@@ -3,6 +3,7 @@ const express = require('express')
 const cors = require('cors')
 const morgan = require('morgan')
 const reviewRoutes = require('./modules/reviews/review.routes')
+const categoryRoutes = require('./modules/categories/category.routes')
 const requestLogger = require('./middleware/requestLogger')
 
 function createApp() {
@@ -18,6 +19,7 @@ function createApp() {
   })
 
   app.use('/api/reviews', reviewRoutes)
+  app.use('/api/category', categoryRoutes)
 
   return app
 }
