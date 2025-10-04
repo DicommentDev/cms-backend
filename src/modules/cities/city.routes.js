@@ -1,4 +1,4 @@
-// src/modules/reviews/review.routes.js
+// src/modules/cities/city.routes.js
 const express = require('express')
 const router = express.Router()
 const CityController = require('./city.controller')

@@ -6,6 +6,8 @@ const morgan = require('morgan')
 const reviewRoutes = require('./modules/reviews/review.routes')
 const categoryRoutes = require('./modules/categories/category.routes')
 const cityRoutes = require('./modules/cities/city.routes')
+const articleRoutes = require('./modules/articles/article.routes')
+const serviceRoutes = require('./modules/services/service.routes')
 
 const requestLogger = require('./middleware/requestLogger')
 const errorHandler = require('./middleware/errorHandler')
@@ -29,6 +31,8 @@ function createApp() {
   app.use('/api/reviews', reviewRoutes)
   app.use('/api/category', categoryRoutes)
   app.use('/api/city', cityRoutes)
+  app.use('/api/article', articleRoutes)
+  app.use('/api/service', serviceRoutes)
 
   console.log('✅ Express app created')
   app.use(errorHandler)
