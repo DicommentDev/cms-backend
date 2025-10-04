@@ -8,6 +8,7 @@ const categoryRoutes = require('./modules/categories/category.routes')
 const cityRoutes = require('./modules/cities/city.routes')
 
 const requestLogger = require('./middleware/requestLogger')
+const errorHandler = require('./middleware/errorHandler')
 
 function createApp() {
   const app = express()
@@ -30,6 +31,7 @@ function createApp() {
   app.use('/api/city', cityRoutes)
 
   console.log('✅ Express app created')
+  app.use(errorHandler)
 
   return app
 }

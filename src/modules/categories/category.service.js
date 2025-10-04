@@ -1,16 +1,19 @@
 // src/modules/categories/category.service.js
-const { supabaseAdmin } = require('../../config/supabase')
-const generateSlug = require('../../helper/generateSlug')
+const { supabaseAdmin } = require('../../config/supabase');
+const generateSlug = require('../../helper/generateSlug');
+const { NotFoundError, BadRequestError, DatabaseError } = require('../../utils/errors');
 
 const CategoryService = {
   async getAll() {
     const { data, error } = await supabaseAdmin
       .from('categories')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false });
 
-    if (error) throw new Error(error.message)
-    return data
+    if (error) {
+      throw new DatabaseError(`Failed to fetch categories: ${error.message}`);
+    }
+    return data;
   },
 
   async getById(id) {
@@ -18,37 +21,35 @@ const CategoryService = {
       .from('categories')
       .select('*')
       .eq('id', id)
-      .single()
+      .single();
 
     if (error) {
       if (error.code === 'PGRST116') {
-        throw new Error('Review not found')
+        throw new NotFoundError('Category not found');
       }
-      throw new Error(error.message)
+      throw new DatabaseError(`Failed to fetch category: ${error.message}`);
     }
-    return data
+    return data;
   },
 
   async create({ name, slug }) {
     if (!name || typeof name !== 'string' || name.trim() === '') {
-      throw new Error('Category name is required and must be a non-empty string');
+      throw new BadRequestError('Category name is required and must be a non-empty string');
     }
 
-    const finalSlug = slug || generateSlug(name);
+    const finalSlug = slug || generateSlug(name.trim());
 
     const { data, error } = await supabaseAdmin
       .from('categories')
-      .insert([
-        {
-          name: name.trim(),
-          slug: finalSlug,
-        },
-      ])
+      .insert([{ name: name.trim(), slug: finalSlug }])
       .select()
       .single();
 
     if (error) {
-      throw new Error(error.message);
+      if (error.code === '23505') {
+        throw new BadRequestError('Category with this slug already exists');
+      }
+      throw new DatabaseError(`Failed to create category: ${error.message}`);
     }
 
     return data;
@@ -56,21 +57,21 @@ const CategoryService = {
 
   async update(id, { name, slug }) {
     if (!id) {
-      throw new Error('Category ID is required');
+      throw new BadRequestError('Category ID is required');
     }
 
     const updateData = {};
 
     if (name !== undefined) {
       if (typeof name !== 'string' || name.trim() === '') {
-        throw new Error('Category name must be a non-empty string');
+        throw new BadRequestError('Category name must be a non-empty string');
       }
       updateData.name = name.trim();
     }
 
     if (slug !== undefined) {
       if (typeof slug !== 'string') {
-        throw new Error('Slug must be a string');
+        throw new BadRequestError('Slug must be a string');
       }
       updateData.slug = slug.trim();
     }
@@ -88,9 +89,12 @@ const CategoryService = {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        throw new Error('Category not found');
+        throw new NotFoundError('Category not found');
       }
-      throw new Error(error.message);
+      if (error.code === '23505') {
+        throw new BadRequestError('Slug already exists');
+      }
+      throw new DatabaseError(`Failed to update category: ${error.message}`);
     }
 
     return data;
@@ -102,16 +106,16 @@ const CategoryService = {
       .delete()
       .eq('id', id)
       .select()
-      .single()
+      .single();
 
     if (error) {
       if (error.code === 'PGRST116') {
-        throw new Error('Review not found')
+        throw new NotFoundError('Category not found');
       }
-      throw new Error(error.message)
+      throw new DatabaseError(`Failed to delete category: ${error.message}`);
     }
-    return data
+    return data;
   },
-}
+};
 
-module.exports = CategoryService
+module.exports = CategoryService;
