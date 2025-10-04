@@ -1,15 +1,19 @@
 // src/modules/reviews/review.service.js
-const { supabaseAdmin } = require('../../config/supabase')
+
+const { supabaseAdmin } = require('../../config/supabase');
+const { NotFoundError, BadRequestError, DatabaseError } = require('../../utils/errors');
 
 const ReviewService = {
   async getAll() {
     const { data, error } = await supabaseAdmin
       .from('reviews')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false });
 
-    if (error) throw new Error(error.message)
-    return data
+    if (error) {
+      throw new DatabaseError(`Failed to fetch reviews: ${error.message}`);
+    }
+    return data;
   },
 
   async getById(id) {
@@ -17,61 +21,80 @@ const ReviewService = {
       .from('reviews')
       .select('*')
       .eq('id', id)
-      .single()
+      .single();
 
     if (error) {
       if (error.code === 'PGRST116') {
-        throw new Error('Review not found')
+        throw new NotFoundError('Review not found');
       }
-      throw new Error(error.message)
+      throw new DatabaseError(`Failed to fetch review: ${error.message}`);
     }
-    return data
+    return data;
   },
 
-  async create({ name, rating, message }) {
-    if (!name || rating === undefined || rating < 1 || rating > 5) {
-      throw new Error('Invalid input: name and rating (1-5) are required')
+  async create(payload) {
+    const { name, rating, message } = payload;
+
+    // ✅ Validasi dasar (required, tipe) → di middleware
+    // ✅ Tapi validasi **rating 1–5** adalah logika bisnis → tetap di service
+
+    if (rating < 1 || rating > 5) {
+      throw new BadRequestError('Rating must be between 1 and 5');
     }
 
     const { data, error } = await supabaseAdmin
       .from('reviews')
       .insert([
         {
-          name,
+          name: name.trim(),
           rating,
-          message: message || null,
+          message: message ? message.trim() : null,
         },
       ])
       .select()
-      .single()
+      .single();
 
-    if (error) throw new Error(error.message)
-    return data
+    if (error) {
+      // Jika ada constraint (misal unique user+product), bisa tambah penanganan 23505
+      throw new DatabaseError(`Failed to create review: ${error.message}`);
+    }
+
+    return data;
   },
 
-  async update(id, { name, rating, message }) {
-    const updateData = {}
-    if (name !== undefined) updateData.name = name
-    if (rating !== undefined) {
-      if (rating < 1 || rating > 5) throw new Error('Rating must be between 1 and 5')
-      updateData.rating = rating
+  async update(id, payload) {
+    const updateData = {};
+
+    if (payload.name !== undefined) {
+      updateData.name = payload.name.trim();
     }
-    if (message !== undefined) updateData.message = message
+
+    if (payload.rating !== undefined) {
+      if (payload.rating < 1 || payload.rating > 5) {
+        throw new BadRequestError('Rating must be between 1 and 5');
+      }
+      updateData.rating = payload.rating;
+    }
+
+    if (payload.message !== undefined) {
+      updateData.message = payload.message ? payload.message.trim() : null;
+    }
 
     const { data, error } = await supabaseAdmin
       .from('reviews')
       .update(updateData)
       .eq('id', id)
       .select()
-      .single()
+      .single();
 
     if (error) {
       if (error.code === 'PGRST116') {
-        throw new Error('Review not found')
+        throw new NotFoundError('Review not found');
       }
-      throw new Error(error.message)
+      throw new DatabaseError(`Failed to update review: ${error.message}`);
     }
-    return data
+
+    return data;
   },
 
   async delete(id) {
@@ -80,16 +103,16 @@ const ReviewService = {
       .delete()
       .eq('id', id)
       .select()
-      .single()
+      .single();
 
     if (error) {
       if (error.code === 'PGRST116') {
-        throw new Error('Review not found')
+        throw new NotFoundError('Review not found');
       }
-      throw new Error(error.message)
+      throw new DatabaseError(`Failed to delete review: ${error.message}`);
     }
-    return data
+    return data;
   },
-}
+};
 
-module.exports = ReviewService
+module.exports = ReviewService;
