@@ -1,5 +1,5 @@
 // src/api/index.js
-const createApp = require('../app');
+const createApp = require('../src/app');
 const serverless = require('serverless-http');
 console.log('✅ Serverless function initialized');
 const app = createApp();
