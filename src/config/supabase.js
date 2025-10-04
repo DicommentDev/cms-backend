@@ -12,4 +12,7 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+console.log('Supabase URL:', process.env.SUPABASE_URL);
+console.log('Supabase Key:', process.env.SUPABASE_ANON_KEY ? 'Exists' : 'Missing');
+
 module.exports = { supabase, supabaseAdmin };

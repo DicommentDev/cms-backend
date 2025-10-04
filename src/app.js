@@ -11,11 +11,15 @@ const requestLogger = require('./middleware/requestLogger')
 
 function createApp() {
   const app = express()
-
+  
   app.use(requestLogger)
   app.use(cors())
   app.use(express.json())
   app.use(morgan('dev'))
+
+  app.get('/ping', (req, res) => {
+    res.json({ message: 'pong' })
+  })
 
   app.get('/', (req, res)=>{
     res.send('cms-backend')
@@ -24,6 +28,8 @@ function createApp() {
   app.use('/api/reviews', reviewRoutes)
   app.use('/api/category', categoryRoutes)
   app.use('/api/city', cityRoutes)
+
+  console.log('✅ Express app created')
 
   return app
 }
